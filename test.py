@@ -3,13 +3,15 @@ import pickle
 import shutil
 import random
 import numpy as np
+import pandas as pd
 
 import tensorflow as tf
 from keras.models import load_model
 from keras import layers
 
 
-def find_misclassified_images(model, test_dataset, class_names):
+def find_images_info(model, test_dataset, class_names):
+    all_images = []
     misclassified_images = []
 
     for images, labels in test_dataset:
@@ -18,12 +20,15 @@ def find_misclassified_images(model, test_dataset, class_names):
         true_labels = labels.numpy()
 
         for i in range(len(true_labels)):
-            if predicted_labels[i] != true_labels[i]:
-                image = images[i].numpy() * 255
-                misclassified_images.append(
-                    (image.astype("uint8"), class_names[predicted_labels[i]], class_names[true_labels[i]]))
+            file_name = os.path.basename(test_ds.file_paths[i])
 
-    return misclassified_images
+            all_images.append(
+                (file_name, class_names[predicted_labels[i]], class_names[true_labels[i]]))
+            if predicted_labels[i] != true_labels[i]:
+                misclassified_images.append(
+                    (file_name, class_names[predicted_labels[i]], class_names[true_labels[i]]))
+
+    return all_images, misclassified_images
 
 
 def calculate_misclassification_stats(misclassified_images, class_names, count_per_phase):
@@ -44,17 +49,21 @@ def calculate_misclassification_stats(misclassified_images, class_names, count_p
 
 
 # Wczytanie modelu
-model = load_model('model_v2.h5')
+model = load_model('model_v3.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
     used_files = pickle.load(f)
 
-# Wczytanie zmiennych
+# Wczytanie danych
 class_names = np.load('class_names.npy')
-data_info = np.load('data_info.npy', allow_pickle=True).item()
-data_root = data_info['data_root']
-data_directories = data_info['data_directories']
+
+with open('data_element_distribution.pkl', 'rb') as file:
+    loaded_data = pickle.load(file)
+
+data_root = loaded_data['data_root']
+selected_folders = loaded_data['selected_folders']
+num_test_files_per_directory = loaded_data['num_test_files_per_directory']
 
 # Tworzenie katalogu dla zbioru testowego
 for class_label in ['brak', 'opady']:
@@ -62,41 +71,23 @@ for class_label in ['brak', 'opady']:
         shutil.rmtree(os.path.join(data_root, 'test', 'data', class_label))
     os.makedirs(os.path.join(data_root, 'test', 'data', class_label), exist_ok=True)
 
-# Ręczne określenie liczby elementów dla zbioru testowego
-num_files_per_directory = {
-    'brak_cityscapes': 0,
-    'brak_highway': 0,
-    'brak_istanbul': 0,
-    'brak_nonviolence': 200,
-    'brak_spac': 0,
-    'brak_towncentre': 50,
-    'opady_aau': 50,
-    'opady_blink': 50,
-    'opady_cityscapes': 0,
-    'opady_crazy': 50,
-    'opady_heavy': 50,
-    'opady_kendal': 0,
-    'opady_saleem': 50,
-    'opady_spac': 0
-}
-
 # Pobieranie danych testowych
-for directory in data_directories:
-    class_label = os.path.basename(directory).split('_')[0]  # Pobranie etykiety z nazwy katalogu
+for directory in selected_folders:
+    # Pobranie etykiety z nazwy folderu
+    class_label = os.path.basename(directory).split('_')[0]
     class_files = os.listdir(directory)
 
     # Zastosowanie seed, aby uzyskać takie same wyniki przy każdym uruchomieniu
     random.seed(123)
 
     # Losowanie unikalnego zestawu plików, wykluczając te z used_files
-    if num_files_per_directory[os.path.basename(directory)] != 0:
-        files_to_copy = random.sample([f for f in class_files if f not in used_files], num_files_per_directory[os.path.basename(directory)])
+    files_to_copy = random.sample([f for f in class_files if f not in used_files], num_test_files_per_directory[os.path.basename(directory)])
 
-        for file in files_to_copy:
-            source = os.path.join(directory, file)
-            destination_folder = os.path.join(data_root, 'test', 'data', class_label)
-            destination = os.path.join(destination_folder, file)
-            shutil.copy(source, destination)
+    for file in files_to_copy:
+        source = os.path.join(directory, file)
+        destination_folder = os.path.join(data_root, 'test', 'data', class_label)
+        destination = os.path.join(destination_folder, file)
+        shutil.copy(source, destination)
 
 # Liczebność zbioru testowego
 count_per_phase = {'test': {'brak': 0, 'opady': 0}}
@@ -130,10 +121,17 @@ normalized_test_ds = test_ds.map(lambda x, y: (normalization_layer(x), y))
 
 # Ewaluacja na zbiorze testowym
 test_loss, test_accuracy = model.evaluate(normalized_test_ds)
-print("Test accuracy: {}".format(test_accuracy))
+print("Dokładność testowa: {}".format(test_accuracy))
 
-# Sprawdzenie, które obrazy zostały źle sklasyfikowane
-misclassified_images = find_misclassified_images(model, normalized_test_ds, class_names)
+# Sprawdzenie, które obrazy zostały źle sklasyfikowane / Tworzenie listy wszystkich przewidywanych etykiet
+all_images, misclassified_images = find_images_info(model, normalized_test_ds, class_names)
 
 # Obliczanie liczby błędnie sklasyfikowanych obrazów dla każdej klasy
 calculate_misclassification_stats(misclassified_images, class_names, count_per_phase)
+
+# Tworzenie DataFrame z informacjami o obrazach
+df = pd.DataFrame(all_images, columns=["Plik obrazu", "Etykieta przewidywana", "Etykieta prawdziwa"])
+
+# Zapisanie do pliku Excel
+excel_path = "all_images_info.xlsx"
+df.to_excel(excel_path, index=False)

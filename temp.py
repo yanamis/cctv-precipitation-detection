@@ -46,8 +46,14 @@ def scheduler(epoch, lr):
         return lr * tf.math.exp(-0.1)
 
 
+with open('data_element_distribution.pkl', 'rb') as file:
+    loaded_data = pickle.load(file)
+
+selected_folders = loaded_data['selected_folders']
+num_test_files_per_directory = loaded_data['num_test_files_per_directory']
+
 # Ścieżka do głównego folderu z danymi
-data_root = 'C:\\Users\\yanam\\opady_dataset\\dataset'
+data_root = loaded_data['data_root']
 
 # Lista folderów z danymi
 data_directories = [
@@ -74,37 +80,34 @@ for phase in ['train', 'val']:
             shutil.rmtree(os.path.join(data_root, phase, 'data', class_label))
         os.makedirs(os.path.join(data_root, phase, 'data', class_label), exist_ok=True)
 
-# Ręczne określenie liczby elementów do pobrania z każdego folderu
-num_files_per_directory = {
+# Inicjalizacja num_files_per_directory z domyślnymi wartościami
+num_files_per_directory = {folder_name: 0 for folder_name in map(os.path.basename, data_directories)}
+
+# Dostosowanie num_files_per_directory na podstawie selected_folders
+for folder in data_directories:
+    folder_name = os.path.basename(folder)
+    if folder in selected_folders:
+        num_files_per_directory[folder_name] = len(os.listdir(folder)) - num_test_files_per_directory[folder_name]
+
+# Ręczne określenie liczby elementów do pobrania z pozostałych folderów
+additional_values = {
     'brak_cityscapes': 500,
-    'brak_highway': 98,
-    'brak_istanbul': 0,
-    'brak_nonviolence': 1099,
+    # 'brak_highway': 98,
+    # 'brak_istanbul': 0,
+    # 'brak_nonviolence': 1099,
     'brak_spac': 2311,
-    'brak_towncentre': 250,
-    'opady_aau': 130,
-    'opady_blink': 51,
+    # 'brak_towncentre': 250,
+    # 'opady_aau': 130,
+    # 'opady_blink': 51,
     'opady_cityscapes': 450,
-    'opady_crazy': 348,
+    # 'opady_crazy': 348,
     'opady_heavy': 1598,
-    'opady_kendal': 0,
-    'opady_saleem': 181,
+    # 'opady_kendal': 0,
+    # 'opady_saleem': 181,
     'opady_spac': 1500
 }
 
-# Tworzenie unikalnej nazwy dla plików w folderach
-# for directory in data_directories:
-#     class_files = os.listdir(directory)
-#
-#     for file in class_files:
-#         source = os.path.join(directory, file)
-#
-#         # Tworzenie unikalnej nazwy dla pliku
-#         new_file_name = "{}_{}".format(os.path.basename(directory), file)
-#
-#         destination = os.path.join(directory, new_file_name)
-#
-#         os.rename(source, destination)
+num_files_per_directory.update(additional_values)
 
 # Lista użytych plików
 used_files = []
@@ -259,15 +262,14 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Zapisywanie modelu
-model.save('model_v2.h5')
+model.save('model_v3.h5')
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:
     pickle.dump(used_files, f)
 
-# Zapisywanie zmiennych
+# Zapisywanie class_names
 np.save('class_names.npy', class_names)
-np.save('data_info.npy', {'data_root': data_root, 'data_directories': data_directories})
 
 # Wykres dokładności
 plt.figure(figsize=(8, 8))
