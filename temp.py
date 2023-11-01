@@ -30,8 +30,11 @@ def process_image(source, destination, img_height, img_width):
         scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
         scaled_image = scaled_image[:img_height, :]
 
-    # Zapisywanie przeskalowanego i obciętego obrazu
-    cv2.imwrite(destination, scaled_image)
+    # Zastosowanie filtracji medianowej
+    median_filtered_image = cv2.medianBlur(scaled_image, 3)
+
+    # Zapisywanie przeskalowanego, obciętego i przefiltrowanego obrazu
+    cv2.imwrite(destination, median_filtered_image)
 
 
 def display_images(train_dataset, class_names):
@@ -276,7 +279,7 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Zapisywanie modelu
-model.save('model_v4.h5')
+model.save('model_v5.h5')
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:

@@ -71,7 +71,7 @@ def calculate_misclassification_stats(misclassified_images, class_names, count_p
 
 
 # Wczytanie modelu
-model = load_model('model_v4.h5')
+model = load_model('model_v5.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -154,5 +154,5 @@ calculate_misclassification_stats(misclassified_images, class_names, count_per_p
 df = pd.DataFrame(all_images, columns=["Plik obrazu", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v4.xlsx"
+excel_path = "all_images_info_model_v5.xlsx"
 df.to_excel(excel_path, index=False)
