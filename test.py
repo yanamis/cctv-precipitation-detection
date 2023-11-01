@@ -4,10 +4,32 @@ import shutil
 import random
 import numpy as np
 import pandas as pd
+import cv2
 
 import tensorflow as tf
 from keras.models import load_model
 from keras import layers
+
+
+def process_image(source, destination, img_height, img_width):
+    # Wczytanie obrazu
+    image = cv2.imread(source)
+
+    # Określenie proporcji
+    shorter_side, longer_side = sorted(image.shape[:2])
+    aspect_ratio = longer_side / shorter_side
+
+    if aspect_ratio >= 1.5:
+        scale_factor = img_height / shorter_side
+        scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+        scaled_image = scaled_image[:, :img_width]
+    else:
+        scale_factor = img_width / longer_side
+        scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+        scaled_image = scaled_image[:img_height, :]
+
+    # Zapisywanie przeskalowanego i obciętego obrazu
+    cv2.imwrite(destination, scaled_image)
 
 
 def find_images_info(model, test_dataset, class_names):
@@ -49,7 +71,7 @@ def calculate_misclassification_stats(misclassified_images, class_names, count_p
 
 
 # Wczytanie modelu
-model = load_model('model_v3.h5')
+model = load_model('model_v4.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -71,6 +93,10 @@ for class_label in ['brak', 'opady']:
         shutil.rmtree(os.path.join(data_root, 'test', 'data', class_label))
     os.makedirs(os.path.join(data_root, 'test', 'data', class_label), exist_ok=True)
 
+# Rozmiar obrazu
+img_height = 300
+img_width = 450
+
 # Pobieranie danych testowych
 for directory in selected_folders:
     # Pobranie etykiety z nazwy folderu
@@ -87,7 +113,8 @@ for directory in selected_folders:
         source = os.path.join(directory, file)
         destination_folder = os.path.join(data_root, 'test', 'data', class_label)
         destination = os.path.join(destination_folder, file)
-        shutil.copy(source, destination)
+
+        process_image(source, destination, img_height, img_width)
 
 # Liczebność zbioru testowego
 count_per_phase = {'test': {'brak': 0, 'opady': 0}}
@@ -102,19 +129,13 @@ for class_label in count_per_phase[phase]:
 for class_label, count in count_per_phase[phase].items():
     print('Liczba obrazów w {}/{}: {}'.format(phase, class_label, count))
 
-img_height = 300
-img_width = 300
-
 batch_size = 32
 
 test_ds = tf.keras.preprocessing.image_dataset_from_directory(
     os.path.join(data_root, 'test', 'data'),
     batch_size=batch_size,
     image_size=(img_height, img_width),
-    seed=123,
-    interpolation='lanczos3',
-    crop_to_aspect_ratio=True,
-)
+    seed=123,)
 
 normalization_layer = layers.Rescaling(1. / 255)
 normalized_test_ds = test_ds.map(lambda x, y: (normalization_layer(x), y))
@@ -133,5 +154,5 @@ calculate_misclassification_stats(misclassified_images, class_names, count_per_p
 df = pd.DataFrame(all_images, columns=["Plik obrazu", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info.xlsx"
+excel_path = "all_images_info_model_v4.xlsx"
 df.to_excel(excel_path, index=False)

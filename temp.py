@@ -3,6 +3,7 @@ import pickle
 import shutil
 import random
 import numpy as np
+import cv2
 
 import tensorflow as tf
 from keras import layers, Sequential
@@ -10,6 +11,27 @@ from keras.optimizers import Adam
 from keras.callbacks import EarlyStopping, LearningRateScheduler
 
 import matplotlib.pyplot as plt
+
+
+def process_image(source, destination, img_height, img_width):
+    # Wczytanie obrazu
+    image = cv2.imread(source)
+
+    # Określenie proporcji
+    shorter_side, longer_side = sorted(image.shape[:2])
+    aspect_ratio = longer_side / shorter_side
+
+    if aspect_ratio >= 1.5:
+        scale_factor = img_height / shorter_side
+        scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+        scaled_image = scaled_image[:, :img_width]
+    else:
+        scale_factor = img_width / longer_side
+        scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
+        scaled_image = scaled_image[:img_height, :]
+
+    # Zapisywanie przeskalowanego i obciętego obrazu
+    cv2.imwrite(destination, scaled_image)
 
 
 def display_images(train_dataset, class_names):
@@ -112,6 +134,10 @@ num_files_per_directory.update(additional_values)
 # Lista użytych plików
 used_files = []
 
+# Rozmiar obrazu
+img_height = 300
+img_width = 450
+
 # Pobieranie danych
 for directory in data_directories:
     # Pobranie etykiety z nazwy folderu
@@ -126,20 +152,15 @@ for directory in data_directories:
 
     for phase in ['train', 'val']:
         # Podział na zbiór treningowy i walidacyjny
-        if phase == 'train':
-            for file in files_to_copy[:int(0.8 * len(files_to_copy))]:  # 80% do train
-                source = os.path.join(directory, file)
-                destination_folder = os.path.join(data_root, phase, 'data', class_label)
-                destination = os.path.join(destination_folder, file)
-                shutil.copy(source, destination)
-                used_files.append(file)
-        else:
-            for file in files_to_copy[int(0.8 * len(files_to_copy)):]:  # 20% do val
-                source = os.path.join(directory, file)
-                destination_folder = os.path.join(data_root, phase, 'data', class_label)
-                destination = os.path.join(destination_folder, file)
-                shutil.copy(source, destination)
-                used_files.append(file)
+        for file in (files_to_copy[:int(0.8 * len(files_to_copy))] if phase == 'train'
+        else files_to_copy[int(0.8 * len(files_to_copy)):]):  # 80% do train, 20% do val
+            source = os.path.join(directory, file)
+            destination_folder = os.path.join(data_root, phase, 'data', class_label)
+            destination = os.path.join(destination_folder, file)
+
+            process_image(source, destination, img_height, img_width)
+
+            used_files.append(file)
 
 # Liczebność poszczególnych zbiorów
 count_per_phase = {'train': {'brak': 0, 'opady': 0}, 'val': {'brak': 0, 'opady': 0}}
@@ -160,9 +181,6 @@ for phase, classes in count_per_phase.items():
 # Liczba wszystkich elementów
 print('Łączna liczba obrazów: {}'.format(total_count))
 
-img_height = 300
-img_width = 300
-
 batch_size = 32
 
 # Generator danych dla zbioru treningowego
@@ -171,8 +189,6 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
     image_size=(img_height, img_width),
     seed=123,
-    interpolation='lanczos3',
-    crop_to_aspect_ratio=True,
 )
 
 # Generator danych dla zbioru walidacyjnego
@@ -181,8 +197,6 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     batch_size=batch_size,
     image_size=(img_height, img_width),
     seed=123,
-    interpolation='lanczos3',
-    crop_to_aspect_ratio=True,
 )
 
 class_names = train_ds.class_names
@@ -262,7 +276,7 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Zapisywanie modelu
-model.save('model_v3.h5')
+model.save('model_v4.h5')
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:
