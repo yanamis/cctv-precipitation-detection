@@ -1,20 +1,32 @@
 import os
 import pickle
 
+
 # Ścieżka do głównego folderu z danymi
 data_root = 'C:\\Users\\yanam\\opady_dataset\\dataset'
 
 # Lista wybranych folderów do testowania
 selected_folders = [
     os.path.join(data_root, 'brak_highway'),
+    os.path.join(data_root, 'brak_hikvision'),
+    os.path.join(data_root, 'brak_hikvision_2'),
     # os.path.join(data_root, 'brak_istanbul'),
     os.path.join(data_root, 'brak_nonviolence'),
+    os.path.join(data_root, 'brak_saleem'),
+    os.path.join(data_root, 'brak_securicam'),
+    os.path.join(data_root, 'brak_securicam_2'),
+    os.path.join(data_root, 'brak_sunny'),
     os.path.join(data_root, 'brak_towncentre'),
+
     os.path.join(data_root, 'opady_aau'),
     os.path.join(data_root, 'opady_blink'),
     os.path.join(data_root, 'opady_crazy'),
+    os.path.join(data_root, 'opady_giant'),
+    os.path.join(data_root, 'opady_giant_2'),
     os.path.join(data_root, 'opady_heavy'),
+    os.path.join(data_root, 'opady_my_camera'),
     os.path.join(data_root, 'opady_saleem'),
+    os.path.join(data_root, 'opady_saleem_2')
 ]
 
 # Obliczanie całkowitej liczby elementów we wszystkich wybranych folderach

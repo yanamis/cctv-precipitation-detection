@@ -84,17 +84,27 @@ data_root = loaded_data['data_root']
 data_directories = [
     os.path.join(data_root, 'brak_cityscapes'),
     os.path.join(data_root, 'brak_highway'),
-    os.path.join(data_root, 'brak_istanbul'),
+    os.path.join(data_root, 'brak_hikvision'),
+    os.path.join(data_root, 'brak_hikvision_2'),
+    # os.path.join(data_root, 'brak_istanbul'),
     os.path.join(data_root, 'brak_nonviolence'),
+    os.path.join(data_root, 'brak_saleem'),
+    os.path.join(data_root, 'brak_securicam'),
+    os.path.join(data_root, 'brak_securicam_2'),
     os.path.join(data_root, 'brak_spac'),
+    os.path.join(data_root, 'brak_sunny'),
     os.path.join(data_root, 'brak_towncentre'),
+
     os.path.join(data_root, 'opady_aau'),
     os.path.join(data_root, 'opady_blink'),
     os.path.join(data_root, 'opady_cityscapes'),
     os.path.join(data_root, 'opady_crazy'),
+    os.path.join(data_root, 'opady_giant'),
+    os.path.join(data_root, 'opady_giant_2'),
     os.path.join(data_root, 'opady_heavy'),
-    os.path.join(data_root, 'opady_kendal'),
+    os.path.join(data_root, 'opady_my_camera'),
     os.path.join(data_root, 'opady_saleem'),
+    os.path.join(data_root, 'opady_saleem_2'),
     os.path.join(data_root, 'opady_spac')
 ]
 
@@ -117,19 +127,12 @@ for folder in data_directories:
 # Ręczne określenie liczby elementów do pobrania z pozostałych folderów
 additional_values = {
     'brak_cityscapes': 500,
-    # 'brak_highway': 98,
-    # 'brak_istanbul': 0,
-    # 'brak_nonviolence': 1099,
-    'brak_spac': 2311,
-    # 'brak_towncentre': 250,
-    # 'opady_aau': 130,
-    # 'opady_blink': 51,
-    'opady_cityscapes': 450,
-    # 'opady_crazy': 348,
-    'opady_heavy': 1598,
-    # 'opady_kendal': 0,
-    # 'opady_saleem': 181,
-    'opady_spac': 1500
+    'brak_spac': 500,
+
+    'opady_cityscapes': 500,
+    'opady_giant': 953,
+    'opady_heavy': 1054,
+    'opady_spac': 500
 }
 
 num_files_per_directory.update(additional_values)
@@ -191,7 +194,7 @@ train_ds = tf.keras.preprocessing.image_dataset_from_directory(
     os.path.join(data_root, 'train', 'data'),
     batch_size=batch_size,
     image_size=(img_height, img_width),
-    seed=123,
+    seed=123
 )
 
 # Generator danych dla zbioru walidacyjnego
@@ -199,16 +202,16 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
     os.path.join(data_root, 'val', 'data'),
     batch_size=batch_size,
     image_size=(img_height, img_width),
-    seed=123,
+    seed=123
 )
 
 class_names = train_ds.class_names
 
 # Wyświetlenie obrazów dla zbioru treningowego
-display_images(train_ds, class_names)
-
-plt.tight_layout()
-plt.show()
+# display_images(train_ds, class_names)
+#
+# plt.tight_layout()
+# plt.show()
 
 # Tworzenie warstwy normalizacji
 normalization_layer = layers.Rescaling(1. / 255)
@@ -279,7 +282,7 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Zapisywanie modelu
-model.save('model_v5.h5')
+model.save('model_v6.h5')
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:

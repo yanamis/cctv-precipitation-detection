@@ -11,6 +11,13 @@ from keras.models import load_model
 from keras import layers
 
 
+def add_folder(selected_folders, folder_name):
+    folder_path = os.path.join(data_root, folder_name)
+    if folder_path not in selected_folders:
+        selected_folders.append(folder_path)
+        num_test_files_per_directory[folder_name] = list(num_test_files_per_directory.values())[0]
+
+
 def process_image(source, destination, img_height, img_width):
     # Wczytanie obrazu
     image = cv2.imread(source)
@@ -35,6 +42,7 @@ def process_image(source, destination, img_height, img_width):
 def find_images_info(model, test_dataset, class_names):
     all_images = []
     misclassified_images = []
+    image_id = 0
 
     for images, labels in test_dataset:
         predictions = model.predict(images)
@@ -42,13 +50,13 @@ def find_images_info(model, test_dataset, class_names):
         true_labels = labels.numpy()
 
         for i in range(len(true_labels)):
-            file_name = os.path.basename(test_ds.file_paths[i])
+            image_id += 1
 
             all_images.append(
-                (file_name, class_names[predicted_labels[i]], class_names[true_labels[i]]))
+                (image_id, class_names[predicted_labels[i]], class_names[true_labels[i]]))
             if predicted_labels[i] != true_labels[i]:
                 misclassified_images.append(
-                    (file_name, class_names[predicted_labels[i]], class_names[true_labels[i]]))
+                    (image_id, class_names[predicted_labels[i]], class_names[true_labels[i]]))
 
     return all_images, misclassified_images
 
@@ -71,7 +79,7 @@ def calculate_misclassification_stats(misclassified_images, class_names, count_p
 
 
 # Wczytanie modelu
-model = load_model('model_v5.h5')
+model = load_model('model_v6.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -92,6 +100,12 @@ for class_label in ['brak', 'opady']:
     if os.path.exists(os.path.join(data_root, 'test', 'data', class_label)):
         shutil.rmtree(os.path.join(data_root, 'test', 'data', class_label))
     os.makedirs(os.path.join(data_root, 'test', 'data', class_label), exist_ok=True)
+
+# Dodanie nowych danych
+# add_folder(selected_folders, 'brak_securicam_3')
+# add_folder(selected_folders, 'brak_wasting_gas')
+# add_folder(selected_folders, 'opady_night_footage')
+# add_folder(selected_folders, 'opady_heavy_snow')
 
 # Rozmiar obrazu
 img_height = 300
@@ -135,7 +149,8 @@ test_ds = tf.keras.preprocessing.image_dataset_from_directory(
     os.path.join(data_root, 'test', 'data'),
     batch_size=batch_size,
     image_size=(img_height, img_width),
-    seed=123,)
+    seed=123
+)
 
 normalization_layer = layers.Rescaling(1. / 255)
 normalized_test_ds = test_ds.map(lambda x, y: (normalization_layer(x), y))
@@ -151,8 +166,8 @@ all_images, misclassified_images = find_images_info(model, normalized_test_ds, c
 calculate_misclassification_stats(misclassified_images, class_names, count_per_phase)
 
 # Tworzenie DataFrame z informacjami o obrazach
-df = pd.DataFrame(all_images, columns=["Plik obrazu", "Etykieta przewidywana", "Etykieta prawdziwa"])
+df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v5.xlsx"
+excel_path = "all_images_info_model_v6.xlsx"
 df.to_excel(excel_path, index=False)
