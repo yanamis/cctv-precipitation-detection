@@ -196,5 +196,5 @@ display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v7_2_nowe_foldery.xlsx"
+excel_path = "all_images_info_model_v7.xlsx"
 df.to_excel(excel_path, index=False)
