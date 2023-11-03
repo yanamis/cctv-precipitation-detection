@@ -25,7 +25,8 @@ selected_folders = [
     os.path.join(data_root, 'opady_giant_2'),
     os.path.join(data_root, 'opady_heavy'),
     os.path.join(data_root, 'opady_my_camera'),
-    os.path.join(data_root, 'opady_saleem'),
+    os.path.join(data_root, 'opady_night_footage'),
+    # os.path.join(data_root, 'opady_saleem'),
     os.path.join(data_root, 'opady_saleem_2')
 ]
 

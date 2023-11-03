@@ -103,7 +103,8 @@ data_directories = [
     os.path.join(data_root, 'opady_giant_2'),
     os.path.join(data_root, 'opady_heavy'),
     os.path.join(data_root, 'opady_my_camera'),
-    os.path.join(data_root, 'opady_saleem'),
+    os.path.join(data_root, 'opady_night_footage'),
+    # os.path.join(data_root, 'opady_saleem'),
     os.path.join(data_root, 'opady_saleem_2'),
     os.path.join(data_root, 'opady_spac')
 ]
@@ -131,7 +132,8 @@ additional_values = {
 
     'opady_cityscapes': 500,
     'opady_giant': 953,
-    'opady_heavy': 1054,
+    'opady_heavy': 1154,
+    'opady_night_footage': 400,
     'opady_spac': 500
 }
 
@@ -158,8 +160,8 @@ for directory in data_directories:
 
     for phase in ['train', 'val']:
         # Podział na zbiór treningowy i walidacyjny
-        for file in (files_to_copy[:int(0.8 * len(files_to_copy))] if phase == 'train'
-        else files_to_copy[int(0.8 * len(files_to_copy)):]):  # 80% do train, 20% do val
+        for file in (files_to_copy[:int(0.75 * len(files_to_copy))] if phase == 'train'
+        else files_to_copy[int(0.75 * len(files_to_copy)):]):  # 75% do train, 25% do val
             source = os.path.join(directory, file)
             destination_folder = os.path.join(data_root, phase, 'data', class_label)
             destination = os.path.join(destination_folder, file)
@@ -208,10 +210,10 @@ val_ds = tf.keras.preprocessing.image_dataset_from_directory(
 class_names = train_ds.class_names
 
 # Wyświetlenie obrazów dla zbioru treningowego
-# display_images(train_ds, class_names)
-#
-# plt.tight_layout()
-# plt.show()
+display_images(train_ds, class_names)
+
+plt.tight_layout()
+plt.show()
 
 # Tworzenie warstwy normalizacji
 normalization_layer = layers.Rescaling(1. / 255)
@@ -282,7 +284,7 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Zapisywanie modelu
-model.save('model_v6.h5')
+model.save('model_v7.h5')
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:

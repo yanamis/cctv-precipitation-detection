@@ -10,6 +10,8 @@ import tensorflow as tf
 from keras.models import load_model
 from keras import layers
 
+import matplotlib.pyplot as plt
+
 
 def add_folder(selected_folders, folder_name):
     folder_path = os.path.join(data_root, folder_name)
@@ -55,8 +57,9 @@ def find_images_info(model, test_dataset, class_names):
             all_images.append(
                 (image_id, class_names[predicted_labels[i]], class_names[true_labels[i]]))
             if predicted_labels[i] != true_labels[i]:
+                image = images[i].numpy() * 255
                 misclassified_images.append(
-                    (image_id, class_names[predicted_labels[i]], class_names[true_labels[i]]))
+                    (image.astype("uint8"), class_names[predicted_labels[i]], class_names[true_labels[i]]))
 
     return all_images, misclassified_images
 
@@ -78,8 +81,29 @@ def calculate_misclassification_stats(misclassified_images, class_names, count_p
         print("Klasa {}: {} błędnie sklasyfikowanych obrazów ({:.2f}%)".format(class_name, count, misclassification_rate))
 
 
+def display_misclassified_images(images, title):
+    num_images = len(images)
+    num_figures = (num_images - 1) // 12 + 1
+
+    for f in range(num_figures):
+        start_idx = f * 12
+        end_idx = min((f + 1) * 12, num_images)
+        fig, axs = plt.subplots(3, 4, figsize=(12, 9))
+
+        for i, (image, predicted_class, true_class) in enumerate(images[start_idx:end_idx]):
+            ax = axs[i // 4, i % 4]
+            ax.text(0, -5, 'Predicted: {}'.format(predicted_class), fontsize=10, color='black')
+            ax.text(0, 290, 'True: {}'.format(true_class), fontsize=10, color='black')
+            ax.imshow(image)
+            ax.axis("off")
+
+        plt.tight_layout()
+        plt.suptitle(title, fontsize=16)
+        plt.show()
+
+
 # Wczytanie modelu
-model = load_model('model_v6.h5')
+model = load_model('model_v7.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -165,9 +189,12 @@ all_images, misclassified_images = find_images_info(model, normalized_test_ds, c
 # Obliczanie liczby błędnie sklasyfikowanych obrazów dla każdej klasy
 calculate_misclassification_stats(misclassified_images, class_names, count_per_phase)
 
+# Wyświetlenie obrazów źle sklasyfikowanych
+display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
+
 # Tworzenie DataFrame z informacjami o obrazach
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v6.xlsx"
+excel_path = "all_images_info_model_v7_2_nowe_foldery.xlsx"
 df.to_excel(excel_path, index=False)
