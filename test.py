@@ -103,7 +103,7 @@ def display_misclassified_images(images, title):
 
 
 # Wczytanie modelu
-model = load_model('model_v7.h5')
+model = load_model('model_v8.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -126,10 +126,10 @@ for class_label in ['brak', 'opady']:
     os.makedirs(os.path.join(data_root, 'test', 'data', class_label), exist_ok=True)
 
 # Dodanie nowych danych
-# add_folder(selected_folders, 'brak_securicam_3')
 # add_folder(selected_folders, 'brak_wasting_gas')
-# add_folder(selected_folders, 'opady_night_footage')
 # add_folder(selected_folders, 'opady_heavy_snow')
+
+# add_folder(selected_folders, 'brak_nonviolence')
 
 # Rozmiar obrazu
 img_height = 300
@@ -196,5 +196,5 @@ display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v7.xlsx"
+excel_path = "all_images_info_model_v8.xlsx"
 df.to_excel(excel_path, index=False)

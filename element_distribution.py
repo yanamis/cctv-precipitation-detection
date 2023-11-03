@@ -10,11 +10,12 @@ selected_folders = [
     os.path.join(data_root, 'brak_highway'),
     os.path.join(data_root, 'brak_hikvision'),
     os.path.join(data_root, 'brak_hikvision_2'),
-    # os.path.join(data_root, 'brak_istanbul'),
-    os.path.join(data_root, 'brak_nonviolence'),
+    os.path.join(data_root, 'brak_istanbul'),
+    # os.path.join(data_root, 'brak_nonviolence'),
     os.path.join(data_root, 'brak_saleem'),
     os.path.join(data_root, 'brak_securicam'),
     os.path.join(data_root, 'brak_securicam_2'),
+    os.path.join(data_root, 'brak_securicam_3'),
     os.path.join(data_root, 'brak_sunny'),
     os.path.join(data_root, 'brak_towncentre'),
 
@@ -33,11 +34,13 @@ selected_folders = [
 # Obliczanie całkowitej liczby elementów we wszystkich wybranych folderach
 total_elements = sum(len(os.listdir(folder)) for folder in selected_folders)
 
-# Obliczanie 10% całkowitej liczby elementów
-ten_percent = int(total_elements * 0.1)
+# Obliczanie 8% całkowitej liczby elementów
+ten_percent = int(total_elements * 0.08)
 
 # Obliczanie ile elementów ma być pobranych z każdego folderu
 elements_per_folder = ten_percent // len(selected_folders)
+
+print(elements_per_folder)
 
 # Rozdzielanie elementów między foldery i zapisywanie w słowniku
 num_test_files_per_directory = {}

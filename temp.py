@@ -86,11 +86,12 @@ data_directories = [
     os.path.join(data_root, 'brak_highway'),
     os.path.join(data_root, 'brak_hikvision'),
     os.path.join(data_root, 'brak_hikvision_2'),
-    # os.path.join(data_root, 'brak_istanbul'),
-    os.path.join(data_root, 'brak_nonviolence'),
+    os.path.join(data_root, 'brak_istanbul'),
+    # os.path.join(data_root, 'brak_nonviolence'),
     os.path.join(data_root, 'brak_saleem'),
     os.path.join(data_root, 'brak_securicam'),
     os.path.join(data_root, 'brak_securicam_2'),
+    os.path.join(data_root, 'brak_securicam_3'),
     os.path.join(data_root, 'brak_spac'),
     os.path.join(data_root, 'brak_sunny'),
     os.path.join(data_root, 'brak_towncentre'),
@@ -123,18 +124,21 @@ num_files_per_directory = {folder_name: 0 for folder_name in map(os.path.basenam
 for folder in data_directories:
     folder_name = os.path.basename(folder)
     if folder in selected_folders:
-        num_files_per_directory[folder_name] = len(os.listdir(folder)) - num_test_files_per_directory[folder_name]
+        max_num_files = 300
+        num_files_per_directory[folder_name] = min(len(os.listdir(folder)) - num_test_files_per_directory[folder_name],
+                                                   max_num_files)
+
 
 # Ręczne określenie liczby elementów do pobrania z pozostałych folderów
 additional_values = {
-    'brak_cityscapes': 500,
-    'brak_spac': 500,
+    'brak_cityscapes': 300,
+    'brak_spac': 300,
 
-    'opady_cityscapes': 500,
-    'opady_giant': 953,
-    'opady_heavy': 1154,
-    'opady_night_footage': 400,
-    'opady_spac': 500
+    'opady_cityscapes': 300,
+    # 'opady_giant': 953,
+    # 'opady_heavy': 1154,
+    # 'opady_night_footage': 400,
+    'opady_spac': 300
 }
 
 num_files_per_directory.update(additional_values)
@@ -266,7 +270,7 @@ model.summary()
 early_stopping = EarlyStopping(patience=3, restore_best_weights=True)
 lr_scheduler = LearningRateScheduler(scheduler)
 
-epochs = 15
+epochs = 20
 # Trenowanie modelu
 history = model.fit(
     normalized_train_ds,
@@ -284,7 +288,7 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Zapisywanie modelu
-model.save('model_v7.h5')
+model.save('model_v8.h5')
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:
