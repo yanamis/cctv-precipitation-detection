@@ -1,3 +1,4 @@
+import math
 import os
 import pickle
 
@@ -11,13 +12,14 @@ selected_folders = [
     os.path.join(data_root, 'brak_hikvision'),
     os.path.join(data_root, 'brak_hikvision_2'),
     os.path.join(data_root, 'brak_istanbul'),
-    # os.path.join(data_root, 'brak_nonviolence'),
+    os.path.join(data_root, 'brak_nonviolence'),
     os.path.join(data_root, 'brak_saleem'),
     os.path.join(data_root, 'brak_securicam'),
     os.path.join(data_root, 'brak_securicam_2'),
     os.path.join(data_root, 'brak_securicam_3'),
     os.path.join(data_root, 'brak_sunny'),
     os.path.join(data_root, 'brak_towncentre'),
+    os.path.join(data_root, 'brak_wasting_gas'),
 
     os.path.join(data_root, 'opady_aau'),
     os.path.join(data_root, 'opady_blink'),
@@ -25,6 +27,7 @@ selected_folders = [
     os.path.join(data_root, 'opady_giant'),
     os.path.join(data_root, 'opady_giant_2'),
     os.path.join(data_root, 'opady_heavy'),
+    # os.path.join(data_root, 'opady_heavy_snow'),
     os.path.join(data_root, 'opady_my_camera'),
     os.path.join(data_root, 'opady_night_footage'),
     # os.path.join(data_root, 'opady_saleem'),
@@ -35,22 +38,28 @@ selected_folders = [
 total_elements = sum(len(os.listdir(folder)) for folder in selected_folders)
 
 # Obliczanie 8% całkowitej liczby elementów
-ten_percent = int(total_elements * 0.08)
+x_percent = int(total_elements * 0.08)
 
-# Obliczanie ile elementów ma być pobranych z każdego folderu
-elements_per_folder = ten_percent // len(selected_folders)
+# Liczba folderów w klasie 'opady' i 'brak'
+num_opady_folders = len([folder for folder in selected_folders if 'opady' in os.path.basename(folder)])
+num_brak_folders = len([folder for folder in selected_folders if 'brak' in os.path.basename(folder)])
 
-print(elements_per_folder)
+# Obliczanie ile elementów ma być pobranych z każdego folderu w każdej klasie
+elements_per_opady_folder = math.ceil(x_percent / 2 / num_opady_folders)
+elements_per_brak_folder = math.ceil(x_percent / 2 / num_brak_folders)
 
-# Rozdzielanie elementów między foldery i zapisywanie w słowniku
+# Inicjalizacja słownika dla każdego folderu
 num_test_files_per_directory = {}
 
 for folder in selected_folders:
     folder_name = os.path.basename(folder)
     folder_elements = len(os.listdir(folder))
 
-    # Obliczanie ile elementów ma być pobranych z tego folderu
-    elements_to_take = min(elements_per_folder, folder_elements)
+    # Sprawdzenie, do której klasy należy folder
+    if 'opady' in folder_name:
+        elements_to_take = min(elements_per_opady_folder, folder_elements)
+    else:
+        elements_to_take = min(elements_per_brak_folder, folder_elements)
 
     num_test_files_per_directory[folder_name] = elements_to_take
 

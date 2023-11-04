@@ -103,7 +103,7 @@ def display_misclassified_images(images, title):
 
 
 # Wczytanie modelu
-model = load_model('model_v8.h5')
+model = load_model('model_v9.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -196,5 +196,5 @@ display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v8.xlsx"
+excel_path = "all_images_info_model_v9.xlsx"
 df.to_excel(excel_path, index=False)
