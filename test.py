@@ -4,7 +4,6 @@ import shutil
 import random
 import numpy as np
 import pandas as pd
-import cv2
 
 import tensorflow as tf
 from keras.models import load_model
@@ -12,33 +11,7 @@ from keras import layers
 
 import matplotlib.pyplot as plt
 
-
-def add_folder(selected_folders, folder_name):
-    folder_path = os.path.join(data_root, folder_name)
-    if folder_path not in selected_folders:
-        selected_folders.append(folder_path)
-        num_test_files_per_directory[folder_name] = list(num_test_files_per_directory.values())[0]
-
-
-def process_image(source, destination, img_height, img_width):
-    # Wczytanie obrazu
-    image = cv2.imread(source)
-
-    # Określenie proporcji
-    shorter_side, longer_side = sorted(image.shape[:2])
-    aspect_ratio = longer_side / shorter_side
-
-    if aspect_ratio >= 1.5:
-        scale_factor = img_height / shorter_side
-        scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
-        scaled_image = scaled_image[:, :img_width]
-    else:
-        scale_factor = img_width / longer_side
-        scaled_image = cv2.resize(image, None, fx=scale_factor, fy=scale_factor)
-        scaled_image = scaled_image[:img_height, :]
-
-    # Zapisywanie przeskalowanego i obciętego obrazu
-    cv2.imwrite(destination, scaled_image)
+from dataset import process_image
 
 
 def find_images_info(model, test_dataset, class_names):
@@ -103,7 +76,7 @@ def display_misclassified_images(images, title):
 
 
 # Wczytanie modelu
-model = load_model('model_v9.h5')
+model = load_model('plots_model_arch_1/model_arch_1.h5')
 
 # Wczytanie listy użytych plików
 with open('used_files.pkl', 'rb') as f:
@@ -119,21 +92,18 @@ data_root = loaded_data['data_root']
 selected_folders = loaded_data['selected_folders']
 num_test_files_per_directory = loaded_data['num_test_files_per_directory']
 
+# Odczytywanie rozmiaru danych
+with open('image_dimensions.pkl', 'rb') as file:
+    loaded_dimensions = pickle.load(file)
+
+img_height = loaded_dimensions['img_height']
+img_width = loaded_dimensions['img_width']
+
 # Tworzenie katalogu dla zbioru testowego
 for class_label in ['brak', 'opady']:
     if os.path.exists(os.path.join(data_root, 'test', 'data', class_label)):
         shutil.rmtree(os.path.join(data_root, 'test', 'data', class_label))
     os.makedirs(os.path.join(data_root, 'test', 'data', class_label), exist_ok=True)
-
-# Dodanie nowych danych
-# add_folder(selected_folders, 'brak_wasting_gas')
-# add_folder(selected_folders, 'opady_heavy_snow')
-
-# add_folder(selected_folders, 'brak_nonviolence')
-
-# Rozmiar obrazu
-img_height = 300
-img_width = 450
 
 # Pobieranie danych testowych
 for directory in selected_folders:
@@ -196,5 +166,5 @@ display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_v9.xlsx"
+excel_path = "all_images_info_model_arch_1.xlsx"
 df.to_excel(excel_path, index=False)

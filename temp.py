@@ -53,9 +53,12 @@ num_test_files_per_directory = loaded_data['num_test_files_per_directory']
 # Ścieżka do głównego folderu z danymi
 data_root = loaded_data['data_root']
 
-# Rozmiar obrazu
-img_height = 300
-img_width = 450
+# Odczytywanie rozmiaru danych
+with open('image_dimensions.pkl', 'rb') as file:
+    loaded_dimensions = pickle.load(file)
+
+img_height = loaded_dimensions['img_height']
+img_width = loaded_dimensions['img_width']
 
 batch_size = 32
 
@@ -101,6 +104,7 @@ data_augmentation = tf.keras.Sequential(
     ]
 )
 
+arch = 1
 model = Sequential([
     data_augmentation,
     tf.keras.layers.Conv2D(16, (3, 3), activation="relu"),
@@ -151,11 +155,19 @@ val_loss = history.history['val_loss']
 
 epochs_range = range(len(history.history['accuracy']))
 
-# Zapisywanie modelu
-model.save('model_v9.h5')
+# Wersja modelu
+model_version = 'arch_' + str(arch)
 
-# Zapisywanie class_names
-np.save('class_names.npy', class_names)
+# Tworzenie folderu modelu
+plots_dir = 'plots_model_' + model_version
+os.makedirs(plots_dir, exist_ok=True)
+
+# Zapisywanie modelu
+model.save(os.path.join(plots_dir, 'model_' + model_version + '.h5'))
+
+# Zapisywanie historii treningu
+with open(os.path.join(plots_dir, 'history.pkl'), 'wb') as file:
+    pickle.dump(history.history, file)
 
 # Wykres dokładności
 plt.figure(figsize=(8, 8))
@@ -171,4 +183,9 @@ plt.plot(epochs_range, loss, label='Strata Treningowa')
 plt.plot(epochs_range, val_loss, label='Strata Walidacyjna')
 plt.legend(loc='upper right')
 plt.title('Strata Treningowa i Walidacyjna')
-plt.show()
+
+# Zapisywanie wykresów
+plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
+
+# Zapisywanie class_names
+np.save('class_names.npy', class_names)

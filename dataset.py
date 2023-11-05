@@ -90,17 +90,17 @@ for folder in data_directories:
 # Ręczne określenie liczby elementów do pobrania z pozostałych folderów
 additional_values = {
     'brak_cityscapes': 300,
-    'brak_hikvision_2': 250,
+    'brak_hikvision_2': 249,
     'brak_nonviolence': 250,
     'brak_spac': 300,
 
     'opady_cityscapes': 300,
-    'opady_crazy': 300, # można mniej
-    'opady_giant': 350,
-    'opady_heavy': 559,
+    'opady_crazy': 300,
+    'opady_giant': 355,
+    'opady_heavy': 560,
     # 'opady_heavy_snow': 250,
     'opady_my_camera': 500,
-    'opady_night_footage': 190,
+    'opady_night_footage': 195,
     'opady_spac': 300
 }
 
@@ -155,6 +155,15 @@ for phase, classes in count_per_phase.items():
 
 # Liczba wszystkich elementów
 print('Łączna liczba obrazów: {}'.format(total_count))
+
+# Zapisywanie rozmiaru danych
+image_dimensions = {
+    'img_height': img_height,
+    'img_width': img_width
+}
+
+with open('image_dimensions.pkl', 'wb') as file:
+    pickle.dump(image_dimensions, file)
 
 # Zapisywanie listy użytych plików
 with open('used_files.pkl', 'wb') as f:
