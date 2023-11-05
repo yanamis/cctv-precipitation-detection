@@ -104,16 +104,16 @@ data_augmentation = tf.keras.Sequential(
     ]
 )
 
-arch = 2
+arch = 3
 model = Sequential([
     data_augmentation,
-    tf.keras.layers.Conv2D(32, (5, 5), activation="relu"),
-    tf.keras.layers.MaxPooling2D(3, 3),
-    tf.keras.layers.Conv2D(64, (5, 5), activation="relu"),
+    tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
     tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(128, (5, 5), activation="relu"),
-    tf.keras.layers.MaxPooling2D(3, 3),
-    tf.keras.layers.Conv2D(256, (5, 5), activation="relu"),
+    tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
+    tf.keras.layers.MaxPooling2D(2, 2),
+    tf.keras.layers.Conv2D(256, (3, 3), activation="relu"),
+    tf.keras.layers.MaxPooling2D(2, 2),
+    tf.keras.layers.Conv2D(512, (3, 3), activation="relu"),
     tf.keras.layers.MaxPooling2D(2, 2),
     tf.keras.layers.Flatten(),
     tf.keras.layers.Dense(550, activation="relu"),
