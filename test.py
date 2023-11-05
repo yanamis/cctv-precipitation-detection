@@ -1,7 +1,5 @@
 import os
 import pickle
-import shutil
-import random
 import numpy as np
 import pandas as pd
 
@@ -10,8 +8,6 @@ from keras.models import load_model
 from keras import layers
 
 import matplotlib.pyplot as plt
-
-from dataset import process_image
 
 
 def find_images_info(model, test_dataset, class_names):
@@ -76,11 +72,7 @@ def display_misclassified_images(images, title):
 
 
 # Wczytanie modelu
-model = load_model('plots_model_arch_1/model_arch_1.h5')
-
-# Wczytanie listy użytych plików
-with open('used_files.pkl', 'rb') as f:
-    used_files = pickle.load(f)
+model = load_model('plots_model_arch_2/model_arch_2.h5')
 
 # Wczytanie danych
 class_names = np.load('class_names.npy')
@@ -89,8 +81,6 @@ with open('data_element_distribution.pkl', 'rb') as file:
     loaded_data = pickle.load(file)
 
 data_root = loaded_data['data_root']
-selected_folders = loaded_data['selected_folders']
-num_test_files_per_directory = loaded_data['num_test_files_per_directory']
 
 # Odczytywanie rozmiaru danych
 with open('image_dimensions.pkl', 'rb') as file:
@@ -99,43 +89,9 @@ with open('image_dimensions.pkl', 'rb') as file:
 img_height = loaded_dimensions['img_height']
 img_width = loaded_dimensions['img_width']
 
-# Tworzenie katalogu dla zbioru testowego
-for class_label in ['brak', 'opady']:
-    if os.path.exists(os.path.join(data_root, 'test', 'data', class_label)):
-        shutil.rmtree(os.path.join(data_root, 'test', 'data', class_label))
-    os.makedirs(os.path.join(data_root, 'test', 'data', class_label), exist_ok=True)
-
-# Pobieranie danych testowych
-for directory in selected_folders:
-    # Pobranie etykiety z nazwy folderu
-    class_label = os.path.basename(directory).split('_')[0]
-    class_files = os.listdir(directory)
-
-    # Zastosowanie seed, aby uzyskać takie same wyniki przy każdym uruchomieniu
-    random.seed(123)
-
-    # Losowanie unikalnego zestawu plików, wykluczając te z used_files
-    files_to_copy = random.sample([f for f in class_files if f not in used_files], num_test_files_per_directory[os.path.basename(directory)])
-
-    for file in files_to_copy:
-        source = os.path.join(directory, file)
-        destination_folder = os.path.join(data_root, 'test', 'data', class_label)
-        destination = os.path.join(destination_folder, file)
-
-        process_image(source, destination, img_height, img_width)
-
-# Liczebność zbioru testowego
-count_per_phase = {'test': {'brak': 0, 'opady': 0}}
-
-phase = list(count_per_phase.keys())[0]
-
-for class_label in count_per_phase[phase]:
-    directory_path = os.path.join(data_root, phase, 'data', class_label)
-    count = len(os.listdir(directory_path))
-    count_per_phase[phase][class_label] = count
-
-for class_label, count in count_per_phase[phase].items():
-    print('Liczba obrazów w {}/{}: {}'.format(phase, class_label, count))
+# Odczytywanie count_per_phase
+with open('count_per_phase.pkl', 'rb') as file:
+    count_per_phase = pickle.load(file)
 
 batch_size = 32
 
@@ -166,5 +122,5 @@ display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_arch_1.xlsx"
+excel_path = "all_images_info_model_arch_2.xlsx"
 df.to_excel(excel_path, index=False)
