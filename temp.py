@@ -127,65 +127,70 @@ model = Sequential([
     tf.keras.layers.Dense(2, activation="softmax")
 ])
 
-optimizer = Adam(learning_rate=0.00001)
+# Lista różnych wartości szybkości uczenia
+learning_rates = [0.01, 0.001, 0.0001]
 
-model.compile(optimizer=optimizer,
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-              metrics=['accuracy'])
+for lr in learning_rates:
+    optimizer = Adam(learning_rate=lr)
 
-model.summary()
+    model.compile(optimizer=optimizer,
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                  metrics=['accuracy'])
 
-early_stopping = EarlyStopping(patience=3, restore_best_weights=True)
-lr_scheduler = LearningRateScheduler(scheduler)
+    model.summary()
 
-epochs = 20
-# Trenowanie modelu
-history = model.fit(
-    normalized_train_ds,
-    validation_data=normalized_val_ds,
-    epochs=epochs,
-    callbacks=[early_stopping, lr_scheduler]
-)
+    early_stopping = EarlyStopping(patience=3, restore_best_weights=True)
+    lr_scheduler = LearningRateScheduler(scheduler)
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+    epochs = 20
+    # Trenowanie modelu
+    history = model.fit(
+        normalized_train_ds,
+        validation_data=normalized_val_ds,
+        epochs=epochs,
+        callbacks=[early_stopping, lr_scheduler]
+    )
 
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
 
-epochs_range = range(len(history.history['accuracy']))
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
 
-# Wersja modelu
-model_version = 'arch_' + str(arch)
+    epochs_range = range(len(history.history['accuracy']))
 
-# Tworzenie folderu modelu
-plots_dir = 'plots_model_' + model_version
-os.makedirs(plots_dir, exist_ok=True)
+    # Wersja modelu
+    model_version = 'arch_' + str(arch)
 
-# Zapisywanie modelu
-model.save(os.path.join(plots_dir, 'model_' + model_version + '.h5'))
+    # Tworzenie folderu modelu
+    lr_str = str(lr).replace(".", "_")
+    plots_dir = 'plots_model_{}_lr{}'.format(model_version, lr_str)
+    os.makedirs(plots_dir, exist_ok=True)
 
-# Zapisywanie historii treningu
-with open(os.path.join(plots_dir, 'history.pkl'), 'wb') as file:
-    pickle.dump(history.history, file)
+    # Zapisywanie modelu
+    model.save(os.path.join(plots_dir, 'model_{}_lr{}.h5'.format(model_version, lr_str)))
 
-# Wykres dokładności
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Dokładność Treningowa')
-plt.plot(epochs_range, val_acc, label='Dokładność Walidacyjna')
-plt.legend(loc='lower right')
-plt.title('Dokładność Treningowa i Walidacyjna')
+    # Zapisywanie historii treningu
+    with open(os.path.join(plots_dir, 'history.pkl'), 'wb') as file:
+        pickle.dump(history.history, file)
 
-# Wykres straty
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Strata Treningowa')
-plt.plot(epochs_range, val_loss, label='Strata Walidacyjna')
-plt.legend(loc='upper right')
-plt.title('Strata Treningowa i Walidacyjna')
+    # Wykres dokładności
+    plt.figure(figsize=(8, 8))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Dokładność Treningowa')
+    plt.plot(epochs_range, val_acc, label='Dokładność Walidacyjna')
+    plt.legend(loc='lower right')
+    plt.title('Dokładność Treningowa i Walidacyjna')
 
-# Zapisywanie wykresów
-plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
+    # Wykres straty
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Strata Treningowa')
+    plt.plot(epochs_range, val_loss, label='Strata Walidacyjna')
+    plt.legend(loc='upper right')
+    plt.title('Strata Treningowa i Walidacyjna')
+
+    # Zapisywanie wykresów
+    plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
 
 # Zapisywanie class_names
 np.save('class_names.npy', class_names)

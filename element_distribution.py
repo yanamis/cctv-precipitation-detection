@@ -48,7 +48,7 @@ num_brak_folders = len([folder for folder in selected_folders if 'brak' in os.pa
 elements_per_opady_folder = math.ceil(x_percent / 2 / num_opady_folders)
 elements_per_brak_folder = math.ceil(x_percent / 2 / num_brak_folders)
 
-# Inicjalizacja słownika dla każdego folderu
+# Inicjalizacja num_test_files_per_directory dla każdego folderu
 num_test_files_per_directory = {}
 
 for folder in selected_folders:
