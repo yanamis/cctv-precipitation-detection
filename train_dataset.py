@@ -23,7 +23,7 @@ def process_image(source, destination, img_height, img_width):
         scaled_image = scaled_image[:img_height, :]
 
     # Zastosowanie filtracji medianowej
-    median_filtered_image = cv2.medianBlur(scaled_image, 3)
+    median_filtered_image = cv2.medianBlur(scaled_image, 7)
 
     # Zapisywanie przeskalowanego, obciętego i przefiltrowanego obrazu
     cv2.imwrite(destination, median_filtered_image)
