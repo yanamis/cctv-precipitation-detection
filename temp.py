@@ -135,10 +135,10 @@ model.compile(optimizer=optimizer,
 
 model.summary()
 
-early_stopping = EarlyStopping(patience=3, restore_best_weights=True)
+early_stopping = EarlyStopping(patience=5, restore_best_weights=True)
 lr_scheduler = LearningRateScheduler(scheduler)
 
-epochs = 20
+epochs = 30
 # Trenowanie modelu
 history = model.fit(
     normalized_train_ds,
@@ -156,7 +156,7 @@ val_loss = history.history['val_loss']
 epochs_range = range(len(history.history['accuracy']))
 
 # Wersja modelu
-model_version = 'arch_' + str(arch) + '_median_7'
+model_version = 'arch_' + str(arch) + '_median_7_30epochs'
 
 # Tworzenie folderu modelu
 plots_dir = 'plots_model_' + model_version
