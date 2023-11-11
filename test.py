@@ -72,7 +72,7 @@ def display_misclassified_images(images, title):
 
 
 # Wczytanie modelu
-model = load_model('plots_model_arch_3_median_7_30epochs/model_arch_3_median_7_30epochs.h5')
+model = load_model('plots_model_arch_3_img225_150/model_arch_3_img225_150.h5')
 
 # Wczytanie danych
 class_names = np.load('class_names.npy')
@@ -122,5 +122,5 @@ display_misclassified_images(misclassified_images, "Źle sklasyfikowane obrazy")
 df = pd.DataFrame(all_images, columns=["ID", "Etykieta przewidywana", "Etykieta prawdziwa"])
 
 # Zapisanie do pliku Excel
-excel_path = "all_images_info_model_arch_3_median_7_30epochs.xlsx"
+excel_path = "all_images_info_model_arch_3_img225_150.xlsx"
 df.to_excel(excel_path, index=False)

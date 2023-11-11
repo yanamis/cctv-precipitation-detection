@@ -110,8 +110,8 @@ num_files_per_directory.update(additional_values)
 used_files = []
 
 # Rozmiar obrazu
-img_height = 300
-img_width = 450
+img_height = 150
+img_width = 225
 
 # Pobieranie danych
 for directory in data_directories:
