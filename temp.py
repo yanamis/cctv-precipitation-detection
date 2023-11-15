@@ -62,130 +62,134 @@ img_width = loaded_dimensions['img_width']
 
 batch_size = 32
 
-# Generator danych dla zbioru treningowego
-train_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    os.path.join(data_root, 'train', 'data'),
-    batch_size=batch_size,
-    image_size=(img_height, img_width),
-    seed=123
-)
+# Generowanie danych dla każdego podziału
+for split_num in range(1, 5):
+    split_folder = 'split_' + str(split_num)
 
-# Generator danych dla zbioru walidacyjnego
-val_ds = tf.keras.preprocessing.image_dataset_from_directory(
-    os.path.join(data_root, 'val', 'data'),
-    batch_size=batch_size,
-    image_size=(img_height, img_width),
-    seed=123
-)
+    # Generator danych dla zbioru treningowego
+    train_ds = tf.keras.preprocessing.image_dataset_from_directory(
+        os.path.join(data_root, split_folder, 'train', 'data'),
+        batch_size=batch_size,
+        image_size=(img_height, img_width),
+        seed=123
+    )
 
-class_names = train_ds.class_names
+    # Generator danych dla zbioru walidacyjnego
+    val_ds = tf.keras.preprocessing.image_dataset_from_directory(
+        os.path.join(data_root, split_folder, 'val', 'data'),
+        batch_size=batch_size,
+        image_size=(img_height, img_width),
+        seed=123
+    )
 
-# Wyświetlenie obrazów dla zbioru treningowego
-display_images(train_ds, class_names)
+    class_names = train_ds.class_names
 
-plt.tight_layout()
-plt.show()
+    # Wyświetlenie obrazów dla zbioru treningowego
+    display_images(train_ds, class_names)
 
-# Tworzenie warstwy normalizacji
-normalization_layer = layers.Rescaling(1. / 255)
+    plt.tight_layout()
+    plt.show()
 
-normalized_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
-normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
+    # Tworzenie warstwy normalizacji
+    normalization_layer = layers.Rescaling(1. / 255)
 
-# Definicja warstwy augmentacji
-data_augmentation = tf.keras.Sequential(
-    [
-        tf.keras.layers.RandomFlip("horizontal",
-                                   input_shape=(img_height,
-                                                img_width,
-                                                3)),
-        tf.keras.layers.RandomRotation(0.1),
-        tf.keras.layers.RandomZoom(0.1),
-    ]
-)
+    normalized_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
+    normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
-arch = 3
-model = Sequential([
-    data_augmentation,
-    tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(256, (3, 3), activation="relu"),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Conv2D(512, (3, 3), activation="relu"),
-    tf.keras.layers.MaxPooling2D(2, 2),
-    tf.keras.layers.Flatten(),
-    tf.keras.layers.Dense(550, activation="relu"),
-    tf.keras.layers.Dropout(0.1),
-    tf.keras.layers.Dense(400, activation="relu"),
-    tf.keras.layers.Dropout(0.3),
-    tf.keras.layers.Dense(300, activation="relu"),
-    tf.keras.layers.Dropout(0.4),
-    tf.keras.layers.Dense(200, activation="relu"),
-    tf.keras.layers.Dropout(0.2),
-    tf.keras.layers.Dense(2, activation="softmax")
-])
+    # Definicja warstwy augmentacji
+    data_augmentation = tf.keras.Sequential(
+        [
+            tf.keras.layers.RandomFlip("horizontal",
+                                       input_shape=(img_height,
+                                                    img_width,
+                                                    3)),
+            tf.keras.layers.RandomRotation(0.1),
+            tf.keras.layers.RandomZoom(0.1),
+        ]
+    )
 
-optimizer = Adam(learning_rate=0.00001)
+    arch = 3
+    model = Sequential([
+        data_augmentation,
+        tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Conv2D(128, (3, 3), activation="relu"),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Conv2D(256, (3, 3), activation="relu"),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Conv2D(512, (3, 3), activation="relu"),
+        tf.keras.layers.MaxPooling2D(2, 2),
+        tf.keras.layers.Flatten(),
+        tf.keras.layers.Dense(550, activation="relu"),
+        tf.keras.layers.Dropout(0.1),
+        tf.keras.layers.Dense(400, activation="relu"),
+        tf.keras.layers.Dropout(0.3),
+        tf.keras.layers.Dense(300, activation="relu"),
+        tf.keras.layers.Dropout(0.4),
+        tf.keras.layers.Dense(200, activation="relu"),
+        tf.keras.layers.Dropout(0.2),
+        tf.keras.layers.Dense(2, activation="softmax")
+    ])
 
-model.compile(optimizer=optimizer,
-              loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
-              metrics=['accuracy'])
+    optimizer = Adam(learning_rate=0.00001)
 
-model.summary()
+    model.compile(optimizer=optimizer,
+                  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+                  metrics=['accuracy'])
 
-early_stopping = EarlyStopping(patience=5, restore_best_weights=True)
-lr_scheduler = LearningRateScheduler(scheduler)
+    model.summary()
 
-epochs = 30
-# Trenowanie modelu
-history = model.fit(
-    normalized_train_ds,
-    validation_data=normalized_val_ds,
-    epochs=epochs,
-    callbacks=[early_stopping, lr_scheduler]
-)
+    early_stopping = EarlyStopping(patience=3, restore_best_weights=True)
+    lr_scheduler = LearningRateScheduler(scheduler)
 
-acc = history.history['accuracy']
-val_acc = history.history['val_accuracy']
+    epochs = 20
+    # Trenowanie modelu
+    history = model.fit(
+        normalized_train_ds,
+        validation_data=normalized_val_ds,
+        epochs=epochs,
+        callbacks=[early_stopping, lr_scheduler]
+    )
 
-loss = history.history['loss']
-val_loss = history.history['val_loss']
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
 
-epochs_range = range(len(history.history['accuracy']))
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
 
-# Wersja modelu
-model_version = 'arch_' + str(arch) + '_median_5_30epochs'
+    epochs_range = range(len(history.history['accuracy']))
 
-# Tworzenie folderu modelu
-plots_dir = 'plots_model_' + model_version
-os.makedirs(plots_dir, exist_ok=True)
+    # Wersja modelu
+    model_version = 'arch_' + str(arch) + '_median_5_cross_validation_split_' + str(split_num)
 
-# Zapisywanie modelu
-model.save(os.path.join(plots_dir, 'model_' + model_version + '.h5'))
+    # Tworzenie folderu modelu
+    plots_dir = 'plots_model_' + model_version
+    os.makedirs(plots_dir, exist_ok=True)
 
-# Zapisywanie historii treningu
-with open(os.path.join(plots_dir, 'history.pkl'), 'wb') as file:
-    pickle.dump(history.history, file)
+    # Zapisywanie modelu
+    model.save(os.path.join(plots_dir, 'model_' + model_version + '.h5'))
 
-# Wykres dokładności
-plt.figure(figsize=(8, 8))
-plt.subplot(1, 2, 1)
-plt.plot(epochs_range, acc, label='Dokładność Treningowa')
-plt.plot(epochs_range, val_acc, label='Dokładność Walidacyjna')
-plt.legend(loc='lower right')
-plt.title('Dokładność Treningowa i Walidacyjna')
+    # Zapisywanie historii treningu
+    with open(os.path.join(plots_dir, 'history.pkl'), 'wb') as file:
+        pickle.dump(history.history, file)
 
-# Wykres straty
-plt.subplot(1, 2, 2)
-plt.plot(epochs_range, loss, label='Strata Treningowa')
-plt.plot(epochs_range, val_loss, label='Strata Walidacyjna')
-plt.legend(loc='upper right')
-plt.title('Strata Treningowa i Walidacyjna')
+    # Wykres dokładności
+    plt.figure(figsize=(8, 8))
+    plt.subplot(1, 2, 1)
+    plt.plot(epochs_range, acc, label='Dokładność Treningowa')
+    plt.plot(epochs_range, val_acc, label='Dokładność Walidacyjna')
+    plt.legend(loc='lower right')
+    plt.title('Dokładność Treningowa i Walidacyjna')
 
-# Zapisywanie wykresów
-plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
+    # Wykres straty
+    plt.subplot(1, 2, 2)
+    plt.plot(epochs_range, loss, label='Strata Treningowa')
+    plt.plot(epochs_range, val_loss, label='Strata Walidacyjna')
+    plt.legend(loc='upper right')
+    plt.title('Strata Treningowa i Walidacyjna')
 
-# Zapisywanie class_names
-np.save('class_names.npy', class_names)
+    # Zapisywanie wykresów
+    plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
+
+    # Zapisywanie class_names
+    np.save(os.path.join('class_names.npy'), class_names)

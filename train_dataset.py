@@ -29,6 +29,50 @@ def process_image(source, destination, img_height, img_width):
     cv2.imwrite(destination, median_filtered_image)
 
 
+def split_and_copy_data(directory, files, destination, img_height, img_width):
+    # Zastosowanie seed, aby uzyskać takie same wyniki przy każdym uruchomieniu
+    random.seed(123)
+
+    # Losowanie unikalnego zestawu plików
+    random.shuffle(files)
+
+    # Podział na cztery zbiory
+    for i in range(4):
+        phase = 'split_' + str(i + 1)
+
+        # Kolejność podziału
+        order = [i % 4, (i + 1) % 4, (i + 2) % 4, (i + 3) % 4]
+
+        # Tworzenie folderów dla zbiorów treningowego i walidacyjnego
+        for class_label in ['brak', 'opady']:
+            os.makedirs(os.path.join(destination, phase, 'train', 'data', class_label), exist_ok=True)
+            os.makedirs(os.path.join(destination, phase, 'val', 'data', class_label), exist_ok=True)
+
+        # Liczba plików do skopiowania dla danego podziału
+        num_files = num_files_per_directory[os.path.basename(directory)]
+
+        # Kopiowanie plików do odpowiednich zbiorów
+        for j, file in enumerate(files[:num_files]):
+            source = os.path.join(directory, file)
+            class_label = os.path.basename(directory).split('_')[0]
+            destination_folder = os.path.join(destination, phase)
+
+            # Ustalona kolejność dla danego podziału
+            split_index = order[j % 4]
+
+            # Kopiowanie pliku do odpowiedniego zbioru
+            if split_index == 3:
+                # Zbiór walidacyjny
+                destination_val = os.path.join(destination_folder, 'val', 'data', class_label, file)
+                process_image(source, destination_val, img_height, img_width)
+
+                used_files.append(file)
+            else:
+                # Zbiór treningowy
+                destination_train = os.path.join(destination_folder, 'train', 'data', class_label, file)
+                process_image(source, destination_train, img_height, img_width)
+
+
 with open('data_element_distribution.pkl', 'rb') as file:
     loaded_data = pickle.load(file)
 
@@ -113,48 +157,12 @@ used_files = []
 img_height = 300
 img_width = 450
 
-# Pobieranie danych
+# Pobieranie danych i tworzenie podziałów
 for directory in data_directories:
-    # Pobranie etykiety z nazwy folderu
     class_label = os.path.basename(directory).split('_')[0]
     class_files = os.listdir(directory)
 
-    # Zastosowanie seed, aby uzyskać takie same wyniki przy każdym uruchomieniu
-    random.seed(123)
-
-    # Losowanie unikalnego zestawu plików
-    files_to_copy = random.sample(class_files, num_files_per_directory[os.path.basename(directory)])
-
-    for phase in ['train', 'val']:
-        # Podział na zbiór treningowy i walidacyjny
-        for file in (files_to_copy[:int(0.75 * len(files_to_copy))] if phase == 'train'
-        else files_to_copy[int(0.75 * len(files_to_copy)):]):  # 75% do train, 25% do val
-            source = os.path.join(directory, file)
-            destination_folder = os.path.join(data_root, phase, 'data', class_label)
-            destination = os.path.join(destination_folder, file)
-
-            process_image(source, destination, img_height, img_width)
-
-            used_files.append(file)
-
-# Liczebność poszczególnych zbiorów
-count_per_phase = {'train': {'brak': 0, 'opady': 0}, 'val': {'brak': 0, 'opady': 0}}
-
-total_count = 0
-
-for phase in ['train', 'val']:
-    for class_label in ['brak', 'opady']:
-        directory_path = os.path.join(data_root, phase, 'data', class_label)
-        count = len(os.listdir(directory_path))
-        count_per_phase[phase][class_label] = count
-        total_count += count
-
-for phase, classes in count_per_phase.items():
-    for class_label, count in classes.items():
-        print('Liczba obrazów w {}/{}: {}'.format(phase, class_label, count))
-
-# Liczba wszystkich elementów
-print('Łączna liczba obrazów: {}'.format(total_count))
+    split_and_copy_data(directory, class_files, data_root, img_height, img_width)
 
 # Zapisywanie rozmiaru danych
 image_dimensions = {
