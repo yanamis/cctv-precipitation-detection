@@ -16,24 +16,7 @@ def copy_images_from_multiple_folders(source_folders, destination_folder, start_
 
 source_folders = [
     'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\a1_GT',
-    # 'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\a2_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\a3_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\a4_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\b1_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\b2_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\b3_GT',
-    # 'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Testing_Synthetic\\b4_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t1_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t2_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t3_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t4_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t5_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t6_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t7_GT',
-    'C:\\Users\\yanam\\opady_dataset\\SPAC-SupplementaryMaterials-master\\Dataset_Training_Synthetic\\t8_GT',
-    # 'C:\\Users\\yanam\\opady_dataset\\archive_rain_free\\input_images',
-    # 'C:\\Users\\yanam\\opady_dataset\\GTAV-NightRain\\set1\\test\\gt',
-    ]
+]
 
 destination_folder = 'C:\\Users\\yanam\\opady_dataset\\dataset\\brak_spac'
 

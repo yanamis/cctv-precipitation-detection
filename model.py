@@ -97,16 +97,14 @@ for split_num in range(1, 5):
     normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
     # Definicja warstwy augmentacji
-    data_augmentation = tf.keras.Sequential(
-        [
-            tf.keras.layers.RandomFlip("horizontal",
-                                       input_shape=(img_height,
-                                                    img_width,
-                                                    3)),
-            tf.keras.layers.RandomRotation(0.1),
-            tf.keras.layers.RandomZoom(0.1),
-        ]
-    )
+    data_augmentation = tf.keras.Sequential([
+        tf.keras.layers.RandomFlip("horizontal",
+                                   input_shape=(img_height,
+                                                img_width,
+                                                3)),
+        tf.keras.layers.RandomRotation(0.1),
+        tf.keras.layers.RandomZoom(0.1),
+    ])
 
     arch = 3
     model = Sequential([
@@ -176,17 +174,17 @@ for split_num in range(1, 5):
     # Wykres dokładności
     plt.figure(figsize=(8, 8))
     plt.subplot(1, 2, 1)
-    plt.plot(epochs_range, acc, label='Dokładność Treningowa')
-    plt.plot(epochs_range, val_acc, label='Dokładność Walidacyjna')
+    plt.plot(epochs_range, acc, label='Dokładność treningowa')
+    plt.plot(epochs_range, val_acc, label='Dokładność walidacyjna')
     plt.legend(loc='lower right')
-    plt.title('Dokładność Treningowa i Walidacyjna')
+    plt.title('Dokładność treningowa i walidacyjna')
 
     # Wykres straty
     plt.subplot(1, 2, 2)
-    plt.plot(epochs_range, loss, label='Strata Treningowa')
-    plt.plot(epochs_range, val_loss, label='Strata Walidacyjna')
+    plt.plot(epochs_range, loss, label='Strata treningowa')
+    plt.plot(epochs_range, val_loss, label='Strata walidacyjna')
     plt.legend(loc='upper right')
-    plt.title('Strata Treningowa i Walidacyjna')
+    plt.title('Strata treningowa i walidacyjna')
 
     # Zapisywanie wykresów
     plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
