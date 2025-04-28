@@ -1,0 +1,15 @@
+__pycache__/
+
+archive/
+
+data/raw/*
+
+dataset_preparation/*.pkl
+saved_models/*.h5
+saved_models/*.npy
+saved_models/*.pkl
+
+reports/metrics/*.xlsx
+
+.DS_Store
+Thumbs.db

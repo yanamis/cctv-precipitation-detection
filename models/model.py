@@ -10,6 +10,7 @@ from keras.callbacks import EarlyStopping, LearningRateScheduler
 import matplotlib.pyplot as plt
 
 
+# Funkcja wyświetlająca przykładowe obrazy z datasetu | Function to display example images from the dataset
 def display_images(train_dataset, class_names):
     plt.figure(figsize=(12, 6))
 
@@ -37,6 +38,7 @@ def display_images(train_dataset, class_names):
     display_subset(train_dataset)
 
 
+# Funkcja zmieniająca wartość learning rate | Function to adjust learning rate during training
 def scheduler(epoch, lr):
     if epoch < 5:
         return lr
@@ -44,17 +46,18 @@ def scheduler(epoch, lr):
         return lr * tf.math.exp(-0.1)
 
 
-with open('data_element_distribution.pkl', 'rb') as file:
+# Wczytywanie danych o rozkładzie elementów | Loading element distribution data
+with open('dataset_preparation/data_element_distribution.pkl', 'rb') as file:
     loaded_data = pickle.load(file)
 
 selected_folders = loaded_data['selected_folders']
 num_test_files_per_directory = loaded_data['num_test_files_per_directory']
 
-# Ścieżka do głównego folderu z danymi
+# Ścieżka do głównego folderu z danymi | Path to the main data folder
 data_root = loaded_data['data_root']
 
-# Odczytywanie rozmiaru danych
-with open('image_dimensions.pkl', 'rb') as file:
+# Wczytywanie rozmiarów obrazów | Loading image dimensions
+with open('dataset_preparation/image_dimensions.pkl', 'rb') as file:
     loaded_dimensions = pickle.load(file)
 
 img_height = loaded_dimensions['img_height']
@@ -62,11 +65,11 @@ img_width = loaded_dimensions['img_width']
 
 batch_size = 32
 
-# Generowanie danych dla każdego podziału
+# Generowanie danych dla każdego podziału | Generating data for each split
 for split_num in range(1, 5):
     split_folder = 'split_' + str(split_num)
 
-    # Generator danych dla zbioru treningowego
+    # Generator danych dla zbioru treningowego | Generator for training dataset
     train_ds = tf.keras.preprocessing.image_dataset_from_directory(
         os.path.join(data_root, split_folder, 'train', 'data'),
         batch_size=batch_size,
@@ -74,7 +77,7 @@ for split_num in range(1, 5):
         seed=123
     )
 
-    # Generator danych dla zbioru walidacyjnego
+    # Generator danych dla zbioru walidacyjnego | Generator for validation dataset
     val_ds = tf.keras.preprocessing.image_dataset_from_directory(
         os.path.join(data_root, split_folder, 'val', 'data'),
         batch_size=batch_size,
@@ -84,19 +87,18 @@ for split_num in range(1, 5):
 
     class_names = train_ds.class_names
 
-    # Wyświetlenie obrazów dla zbioru treningowego
+    # Wyświetlenie przykładowych obrazów | Displaying example images
     display_images(train_ds, class_names)
 
     plt.tight_layout()
     plt.show()
 
-    # Tworzenie warstwy normalizacji
+    # Normalizacja obrazów | Image normalization
     normalization_layer = layers.Rescaling(1. / 255)
-
     normalized_train_ds = train_ds.map(lambda x, y: (normalization_layer(x), y))
     normalized_val_ds = val_ds.map(lambda x, y: (normalization_layer(x), y))
 
-    # Definicja warstwy augmentacji
+    # Augmentacja danych | Data augmentation
     data_augmentation = tf.keras.Sequential([
         tf.keras.layers.RandomFlip("horizontal",
                                    input_shape=(img_height,
@@ -106,7 +108,9 @@ for split_num in range(1, 5):
         tf.keras.layers.RandomZoom(0.1),
     ])
 
-    arch = 3
+    arch = 3 # Wersja architektury | Architecture version
+
+    # Definicja modelu CNN | Defining CNN model
     model = Sequential([
         data_augmentation,
         tf.keras.layers.Conv2D(64, (3, 3), activation="relu"),
@@ -141,7 +145,8 @@ for split_num in range(1, 5):
     lr_scheduler = LearningRateScheduler(scheduler)
 
     epochs = 20
-    # Trenowanie modelu
+
+    # Trenowanie modelu | Model training
     history = model.fit(
         normalized_train_ds,
         validation_data=normalized_val_ds,
@@ -149,29 +154,25 @@ for split_num in range(1, 5):
         callbacks=[early_stopping, lr_scheduler]
     )
 
-    acc = history.history['accuracy']
-    val_acc = history.history['val_accuracy']
-
-    loss = history.history['loss']
-    val_loss = history.history['val_loss']
-
-    epochs_range = range(len(history.history['accuracy']))
-
-    # Wersja modelu
+    # Zapisywanie modelu | Saving the model
+    os.makedirs('../saved_models', exist_ok=True)
     model_version = 'arch_' + str(arch) + '_median_5_cross_validation_split_' + str(split_num)
+    model.save(os.path.join('../saved_models', 'model_' + model_version + '.h5'))
 
-    # Tworzenie folderu modelu
-    plots_dir = 'plots_model_' + model_version
-    os.makedirs(plots_dir, exist_ok=True)
-
-    # Zapisywanie modelu
-    model.save(os.path.join(plots_dir, 'model_' + model_version + '.h5'))
-
-    # Zapisywanie historii treningu
-    with open(os.path.join(plots_dir, 'history.pkl'), 'wb') as file:
+    # Zapisywanie historii treningu | Saving training history
+    with open(os.path.join('saved_models', 'history_' + model_version + '.pkl'), 'wb') as file:
         pickle.dump(history.history, file)
 
-    # Wykres dokładności
+    # Zapisywanie class names | Saving class names
+    np.save(os.path.join('../saved_models', 'class_names.npy'), class_names)
+
+    # Przygotowanie wykresów dokładności i straty | Preparing accuracy and loss plots
+    acc = history.history['accuracy']
+    val_acc = history.history['val_accuracy']
+    loss = history.history['loss']
+    val_loss = history.history['val_loss']
+    epochs_range = range(len(history.history['accuracy']))
+
     plt.figure(figsize=(8, 8))
     plt.subplot(1, 2, 1)
     plt.plot(epochs_range, acc, label='Dokładność treningowa')
@@ -179,15 +180,14 @@ for split_num in range(1, 5):
     plt.legend(loc='lower right')
     plt.title('Dokładność treningowa i walidacyjna')
 
-    # Wykres straty
     plt.subplot(1, 2, 2)
     plt.plot(epochs_range, loss, label='Strata treningowa')
     plt.plot(epochs_range, val_loss, label='Strata walidacyjna')
     plt.legend(loc='upper right')
     plt.title('Strata treningowa i walidacyjna')
 
-    # Zapisywanie wykresów
-    plt.savefig(os.path.join(plots_dir, 'accuracy_loss_plot.png'))
-
-    # Zapisywanie class_names
-    np.save(os.path.join('class_names.npy'), class_names)
+    # Zapisywanie wykresów | Saving plots
+    os.makedirs('../reports/plots', exist_ok=True)
+    plt.savefig(os.path.join('../reports/plots',
+                             'accuracy_loss_plot_' + model_version + '.png'))
+    plt.close()
